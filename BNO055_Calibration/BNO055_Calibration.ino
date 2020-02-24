@@ -1,3 +1,19 @@
+/* For use of this program, observe the Serial Monitor output. There will be three
+ * calibration readings for each BNO055 sensor: Magnetometer, Gyroscope, and Accelerometer.
+ * Initially, all the readings will read 0. When all readings reach 3, the sensors are fully
+ * calibrated.
+ * 
+ * To calibrate the gyroscope, simple lay the sensors on a flat surface and wait for a few
+ * seconds. To calibrate the magnetometer, move each sensor in a figure-8 motion until 
+ * a 3 is displayed. To calibrate the accelerometer, rotate each BNO055 approximately 45 degrees
+ * along any coordinate axis, pausing after each rotation. Continue until reading displays a 3.
+ * 
+ * Total calibration process takes 1-2 minutes.
+ */
+
+
+
+// Include necessary libraries
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
@@ -38,9 +54,9 @@ void displayCalStatus(void)
   /* Get the four calibration values (0..3) */
   /* Any sensor data reporting 0 should be ignored, */
   /* 3 means 'fully calibrated" */
-  uint8_t system, gyro, accel, mag;
-  system = gyro = accel = mag = 0;
-  bno.getCalibration(&system, &gyro, &accel, &mag);
+  uint8_t system, gyro, accel, mag;  // set variables for each sensor for the first BNO055
+  system = gyro = accel = mag = 0;  // initialize system to 0
+  bno.getCalibration(&system, &gyro, &accel, &mag);  // Start calibration process
 
   /* The data should be ignored until the system calibration is > 0 */
   Serial.print("\t");
@@ -60,10 +76,9 @@ void displayCalStatus(void)
   Serial.print(mag, DEC);
 
 
-
-  uint8_t gyroB, accelB, magB;
-  system = gyroB = accelB = magB = 0;
-  bnoB.getCalibration(&system, &gyroB, &accelB, &magB);
+  uint8_t gyroB, accelB, magB;  // Initialize variables for the second BNO055
+  system = gyroB = accelB = magB = 0;  // initialize system to 0
+  bnoB.getCalibration(&system, &gyroB, &accelB, &magB);  // Start calibration process
 
   /* The data should be ignored until the system calibration is > 0 */
   Serial.print("\t");

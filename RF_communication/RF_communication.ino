@@ -10,6 +10,10 @@ void setup() {
 }
 
 void loop() {
+  /*This code both sends and receives data in the same reading
+  and writing pipe. This is used so that only two RF devices 
+  are needed to establish 2-way communication between these
+  devices*/
   radio.begin();
   radio.openWritingPipe(address); //start writing
   radio.setPALevel(RF24_PA_MIN);
