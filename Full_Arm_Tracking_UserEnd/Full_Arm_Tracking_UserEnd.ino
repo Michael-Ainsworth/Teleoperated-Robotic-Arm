@@ -37,43 +37,46 @@ uint32_t now = 0;
 uint32_t start = 0;
 uint32_t test = 0;
 
-void setup(void) 
+int RFflag = 1;
+char intext[32] = "";
+
+void setup(void)
 {
   Serial.begin(9600);             // Begin Serial communication
   HC12.begin(9600);               // Serial port to HC12
   Serial.println("Orientation Sensor Test"); Serial.println("");
-  
+
   // Initialize the sensor A
-  if(!bnoA.begin())
+  if (!bnoA.begin())
   {
     // Error handling if nothing is returned
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
+    while (1);
   }
-  
+
   delay(1000);  // Wait 1 second
-    
+
   bnoA.setExtCrystalUse(true);  // Used for initializing bnoA variable
 
   // Initialize the sensor B
-  if(!bnoB.begin())
+  if (!bnoB.begin())
   {
     // Error handling if nothing is returned
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
+    while (1);
   }
-  
+
   delay(1000);  // Wait 1 second
-    
+
   bnoB.setExtCrystalUse(true);  // Used for initializing bnoA variable
 }
- 
-void loop(void) 
+
+void loop(void)
 {
   // Create a new sensor event for sensor A
-  sensors_event_t eventA; 
+  sensors_event_t eventA;
   bnoA.getEvent(&eventA);
-  
+
   imu::Quaternion quatA = bnoA.getQuat();  // Get the quaternion
 
   // Get each element of the quaternion
@@ -83,10 +86,10 @@ void loop(void)
   float z = (quatA.z());
 
   // Create a new sensor event for sensor B
-  sensors_event_t eventB; 
+  sensors_event_t eventB;
   bnoB.getEvent(&eventB);
 
-  
+
   imu::Quaternion quatB = bnoB.getQuat();  // Get the quaternion
 
   // Get each element of the quaternion
@@ -95,33 +98,33 @@ void loop(void)
   float yB = (quatB.y());
   float zB = (quatB.z());
 
-  if(millis() - start > 200) {    // While time is less that 200 milliseconds
+  if (millis() - start > 200) {   // While time is less that 200 milliseconds
     int count = 0;    // Initialize count
     float sum[3] = {0.0, 0.0, 0.0};   // Set empty array to fill with final position
-    now = millis();   // Set now variable to current time 
-    
-    while(millis() - now < 500) {   // While time is less that 500 milliseconds
+    now = millis();   // Set now variable to current time
+
+    while (millis() - now < 500) {  // While time is less that 500 milliseconds
       q[0] = w; q[1] = x; q[2] = y; q[3] = z;    // Set initial quaternion points for sensor A
       quatConj(q);   // Call quatConj function on the current quaternion
       q_conj_[0] = q_conj[0]; q_conj_[1] = q_conj[1]; q_conj_[2] = q_conj[2]; q_conj_[3] = q_conj[3];  // Update quaternion
-      
+
       float lu = 0.25;    // Set length of upper arm
       float armCoords[4] = {0.0f, lu, 0.0f, 0.0f};    // Use arm length to initialize quaternion once in T-pose
-      
+
       quatMult(q, armCoords);   // Call quatMult function
       // Update the quaternion after completing the matrix multiplication
       q_tempMult[0] = q_mult[0]; q_tempMult[1] = q_mult[1]; q_tempMult[2] = q_mult[2]; q_tempMult[3] = q_mult[3];
       // Multiply the current quaternion by the conjugate
       quatMult(q_tempMult, q_conj_);  // Creates final elbow positions
-      float elbowPos[4] = {q_mult[0], q_mult[1], q_mult[2], q_mult[3]};    // Set elbow position to single variable   
-      
+      float elbowPos[4] = {q_mult[0], q_mult[1], q_mult[2], q_mult[3]};    // Set elbow position to single variable
+
       qB[0] = wB; qB[1] = xB; qB[2] = yB; qB[3] = zB;  // Set initial quaternion points for sensor B
       quatConj(qB);   // Call quatConj function on the current quaternion
       q_conj_B[0] = q_conj[0]; q_conj_B[1] = q_conj[1]; q_conj_B[2] = q_conj[2]; q_conj_B[3] = q_conj[3];  // Update quaternion
-      
+
       float lu1 = 0.25;    // Set length of forearm
       float armCoordsB[4] = {0.0f, lu1, 0.0f, 0.0f};    // Use arm length to initialize quaternion once in T-pose
-      
+
       quatMult(qB, armCoordsB);  // Call quatMult function
       // Update the quaternion after completing the matrix multiplication
       q_tempMultB[0] = q_mult[0]; q_tempMultB[1] = q_mult[1]; q_tempMultB[2] = q_mult[2]; q_tempMultB[3] = q_mult[3];
@@ -139,29 +142,85 @@ void loop(void)
       count += 1;
     }
 
-    float average[3] = {sum[0]/float(count), sum[1]/float(count), sum[2]/float(count)};  // Divide position by count
+    float average[3] = {sum[0] / float(count), sum[1] / float(count), sum[2] / float(count)}; // Divide position by count
 
     // Print all position locations to the HC12 to be sent to opposite Serial monitor.
     HC12.print(average[0]); HC12.print(",");
     HC12.print(average[1]); HC12.print(",");
     HC12.print(average[2]); HC12.print("!");
-    
+
     while (HC12.available()) {        // If HC-12 has data
       Serial.write(HC12.read());      // Send the data to Serial monitor
     }
-    
+
     while (Serial.available()) {      // If Serial monitor has data
       HC12.write(Serial.read());      // Send that data to HC-12
     }
 
-    radio.begin();
-    radio.openWritingPipe(address); // start writing
-    radio.setPALevel(RF24_PA_MIN);
-  
-    const char outtext[] = "o"; // writing
-    radio.write(&outtext, sizeof(outtext));
-    Serial.print("Outgoing text: ");
-    Serial.println(outtext);
+    //////// START OF RF COMMUNICATION AND HAPTIC FEEDBACK ///////
+    if (RFflag == 1) {
+      // sending open/close
+      radio.begin();
+      radio.openWritingPipe(address); // start writing
+      radio.setPALevel(RF24_PA_MIN);
+
+      //analog read to check flex sensor value
+      float flexVal = analogRead(A0);
+      Serial.println(flexVal);
+      float threshold = 90;
+
+      if (flexVal > threshold) { //check to see flex sensor value
+        const char outtext[] = "c";
+        radio.write(&outtext, sizeof(outtext));
+        Serial.print("Outgoing text: ");
+        Serial.println(outtext);
+      }
+      if (flexVal < threshold) {
+        const char outtext[] = "o";
+        radio.write(&outtext, sizeof(outtext));
+        Serial.print("Outgoing text: ");
+        Serial.println(outtext);
+      }
+
+    }
+    if (RFflag == -1) {
+      radio.openReadingPipe(0, address); //start reading
+      radio.setPALevel(RF24_PA_MIN);
+      radio.startListening();
+      delay(50);
+
+      if (radio.available()) {// reading
+        intext[32] = "";
+        radio.read(&intext, sizeof(intext));
+        Serial.print("Received text: ");
+        Serial.println(intext);
+      }
+    }
+    //switch the flag
+    RFflag = RFflag * -1;
+    /////////// HAPTIC FEEDBACK //////////
+    //powering vibratingmotors for pins 2,4,12
+    for (int i = 0; i <= 3; i++) {
+      if (intext[i] == 'o') { //?
+        if (i == 0) {analogWrite(4, 0);}
+        if (i == 1) {analogWrite(2, 0);}
+        if (i == 2) {analogWrite(12, 0);}}
+      if (intext[i] == 's') { //?
+        if (i == 0) {analogWrite(4, 100);}
+        if (i == 1) {analogWrite(2, 50);}
+        if (i == 2) {analogWrite(12, 50);}}
+      
+      if (intext[i] == 'm') {
+        if (i == 0) {analogWrite(4, 100);}
+        if (i == 1) {analogWrite(2, 100);}
+        if (i == 2) {analogWrite(12, 100);}}        
+      
+      if (intext[i] == 'h') {
+        if (i == 0) {analogWrite(4, 200);}
+        if (i == 1) {analogWrite(2, 200);}
+        if (i == 2) {analogWrite(12, 200);}}  
+    }
+
 
   }
 }
