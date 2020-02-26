@@ -8,7 +8,7 @@ for i = 1:length(instrfind)
     end
 end 
 
-arduino = serial('/dev/ttyACM0','BAUD', 9600); % Make sure the baud rate and COM port is
+arduino = serial('/dev/ttyACM1','BAUD', 9600); % Make sure the baud rate and COM port is
                                 % same as in Arduino IDE
                                 %/dev/cu.usbmodem1421                    
 fopen(arduino);
@@ -26,7 +26,7 @@ joints_T = [0 -pi/2 -pi/2 -pi/2 pi/2 0];
 disp(' ')
 ur5.move_joints(ur5.home, 10);
 pause(10);
-ur5InvKinControl(ur5FwdKinNew(joints_T), ur5, 8);
+ur5InvKinControl(ur5FwdKin(joints_T), ur5, 8);
 pause(8)
 
 for i = 1:35
