@@ -10,10 +10,10 @@ Within this repository, we have the following files and their intended uses:
 - HC_12_Setup_1: Sample code for demonstrating wireless communication using the HC 12. This file should be run through the                      first Serial port. Data is sent back and forth between both Serial monitors.
 - HC_12_Setup_2: Sample code for demonstrating wireless communication using the HC 12. This file should be run through the                      first Serial port. Data is sent back and forth between both Serial monitors.
 - RF_communication: Sample code to demonstrate RF communication.
-- Helping_hand: Arduino code for controlling and connecting to the Helping Hand.
-- Palpating_puck: Arduino code for contolling the Palpating Puck sensors.
-- PalpatingPuckGUI: GUI code for the Palpating Puck.
+- Helping_Hand: Arduino code for controlling and connecting to the Helping Hand.
+- Palpating_Puck: Arduino code for contolling the Palpating Puck sensors.
 - HelpingHandGUI: GIO code for the Helping Hand
+- PalpatingPuckGUI: GUI code for the Palpating Puck.
 - UR5 Matlab Control: Folder containing all the MATLAB files required for connecting to and controlling the UR5 simulation
   - MATLAB_communication.m: Sample code for sending data from the Arduino to a MATLAB script.
   - UR5_Control: Full control of the UR5. Data is captured by the arm tracker on the user end, sent to the UR5 end through                      wireless communication, and the sent to a MATLAB script using the MATLAB_communication code. From here, the                    positional arguements are translated to the UR5 using reverse kinematics to move the physical robot.
