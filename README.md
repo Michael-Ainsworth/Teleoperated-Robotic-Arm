@@ -17,3 +17,5 @@ Within this repository, we have the following files and their intended uses:
 - UR5 Matlab Control: Folder containing all the MATLAB files required for connecting to and controlling the UR5 simulation
   - MATLAB_communication.m: Sample code for sending data from the Arduino to a MATLAB script.
   - UR5_Control: Full control of the UR5. Data is captured by the arm tracker on the user end, sent to the UR5 end through                      wireless communication, and the sent to a MATLAB script using the MATLAB_communication code. From here, the                    positional arguements are translated to the UR5 using reverse kinematics to move the physical robot.
+
+Project Members include: Michael Ainsworth, Nick Maritato, Dante Navarro, Arik Slepyan
